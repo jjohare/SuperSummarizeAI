@@ -7,7 +7,9 @@ import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
-import openai
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 import PyPDF2
 import pyperclip
 import requests
@@ -109,7 +111,7 @@ def chatgpt(text, source, target_language="brazilian portuguese", context=None):
         additional_context = ""
         if context is not None:
             additional_context = "Additional context: " + context
-        openai.api_key = os.getenv("OPENAI_KEY")
+        
         if source == "youtube":
             system_text = f"""
     The data below is a transcript from a YouTube video. Generate an insightful summary of this data in this language: {target_language}. {additional_context}. Use \\n to break line, if needed. Return the result as a JSON in the following format:
@@ -130,10 +132,8 @@ def chatgpt(text, source, target_language="brazilian portuguese", context=None):
         text_to_chatgpt = system_text + text
         text_to_chatgpt = text_to_chatgpt[:20000]
         
-        response_openai = openai.ChatCompletion.create(
-            model='gpt-4',
-            messages=[{"role": "user", "content": text_to_chatgpt}], 
-        )
+        response_openai = client.chat.completions.create(model='gpt-4',
+        messages=[{"role": "user", "content": text_to_chatgpt}])
         response_message = response_openai.choices[0].message.content
     except Exception as e:
         response_message = "Error: " + str(e)
